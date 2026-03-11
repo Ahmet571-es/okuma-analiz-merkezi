@@ -1,252 +1,275 @@
-# ============================================================
-# hizli_okuma_engine.py — Hızlı Okuma + Anlama Testi
-# GitHub'daki mevcut projeden adapte edilmiş (1-8. Sınıf)
-# ============================================================
-
-KADEME_MAP = {
-    1: "kademe_1", 2: "kademe_1", 3: "kademe_1", 4: "kademe_1",
-    5: "kademe_1", 6: "kademe_1",
-    7: "kademe_2", 8: "kademe_2",
-    9: "kademe_3", 10: "kademe_3",
-    11: "kademe_4", 12: "kademe_4",
-}
-
-KADEME_LABELS = {
-    "kademe_1": "1-6. Sınıf (Temel)",
-    "kademe_2": "7-8. Sınıf (Orta)",
-    "kademe_3": "9-10. Sınıf (İleri)",
-    "kademe_4": "11-12. Sınıf (Üst)",
-}
-
-WPM_NORMS = {
-    "kademe_1": {"cok_yavas": 40, "yavas": 60, "ortalama": 90, "hizli": 120, "cok_hizli": 150},
-    "kademe_2": {"cok_yavas": 90, "yavas": 120, "ortalama": 155, "hizli": 190, "cok_hizli": 230},
-    "kademe_3": {"cok_yavas": 120, "yavas": 155, "ortalama": 195, "hizli": 240, "cok_hizli": 280},
-    "kademe_4": {"cok_yavas": 150, "yavas": 185, "ortalama": 230, "hizli": 275, "cok_hizli": 320},
-}
-
-def grade_to_kademe(grade):
-    return KADEME_MAP.get(grade, "kademe_1")
-
-
-# ============================================================
-# METİNLER
-# ============================================================
-K1_PASSAGES = [
-    {
-        "id": "k1_p1",
-        "title": "Deniz Kaplumbağalarının Yolculuğu",
-        "text": (
-            "Deniz kaplumbağaları, dünyanın en ilginç gezginlerinden biridir. Her yıl binlerce kilometre yüzerek "
-            "doğdukları sahillere geri dönerler. Dişi kaplumbağalar yumurtalarını kumda açtıkları çukurlara bırakır "
-            "ve üzerlerini kumla örter. Yaklaşık iki ay sonra yumurtadan çıkan minik yavrular, ay ışığının "
-            "yansımasını takip ederek denize ulaşmaya çalışır. Ancak bu yolculuk oldukça tehlikelidir. Kuşlar, "
-            "yengeçler ve diğer avcılar yavruları yakalamaya çalışır. Denize ulaşmayı başaran yavrulardan sadece "
-            "binde biri yetişkin olabilir.\n\n"
-            "Bilim insanları, deniz kaplumbağalarının dünyanın manyetik alanını kullanarak yollarını bulduğunu "
-            "keşfetmiştir. Bu yetenek sayesinde okyanusun ortasında bile kaybolmadan binlerce kilometre yüzebilirler. "
-            "Kaplumbağalar ayrıca denizanası, yosun ve küçük deniz canlılarıyla beslenir. Plastik poşetler "
-            "denizanasına benzediği için kaplumbağalar bazen bunları yutarak hastalanır veya ölür.\n\n"
-            "Bugün yedi deniz kaplumbağası türünden altısı nesli tehlike altında olan canlılar listesindedir. "
-            "Sahillerdeki yapay ışıklar, yavruların deniz yerine karaya doğru yönelmesine neden olur. Plastik "
-            "kirliliği, iklim değişikliği ve avlanma da kaplumbağaların hayatını tehdit etmektedir. Birçok ülke "
-            "kaplumbağa yumurtlama sahillerini koruma altına almış ve gönüllü koruma programları başlatmıştır. "
-            "Türkiye'de de Dalyan, Patara ve Anamur gibi sahiller önemli yumurtlama alanlarıdır."
-        ),
-        "questions": [
-            {"id": "k1_q1", "text": "Dişi kaplumbağalar yumurtalarını nereye bırakır?", "options": {"a": "Denizin dibine", "b": "Kayaların arasına", "c": "Kumda açtıkları çukurlara", "d": "Ağaçların altına"}, "answer": "c"},
-            {"id": "k1_q2", "text": "Yavrular denizi nasıl bulur?", "options": {"a": "Annelerini takip ederek", "b": "Ay ışığının yansımasını takip ederek", "c": "Koku alarak", "d": "Rüzgârı takip ederek"}, "answer": "b"},
-            {"id": "k1_q3", "text": "Denize ulaşan yavrulardan ne kadarı yetişkin olabilir?", "options": {"a": "Yarısı", "b": "Onda biri", "c": "Binde biri", "d": "Hepsi"}, "answer": "c"},
-            {"id": "k1_q4", "text": "Kaplumbağalar yollarını nasıl bulur?", "options": {"a": "Yıldızlara bakarak", "b": "Dünyanın manyetik alanını kullanarak", "c": "Akıntıları takip ederek", "d": "Diğer kaplumbağaları izleyerek"}, "answer": "b"},
-            {"id": "k1_q5", "text": "Plastik poşetler neden tehlikelidir?", "options": {"a": "Gürültü çıkardığı için", "b": "Sıcaklığı değiştirdiği için", "c": "Denizanasına benzediği için yutarlar", "d": "Yüzmelerini engellediği için"}, "answer": "c"},
-            {"id": "k1_q6", "text": "Kaç tür nesli tehlike altındadır?", "options": {"a": "Üç", "b": "Dört", "c": "Beş", "d": "Altı"}, "answer": "d"},
-            {"id": "k1_q7", "text": "Yapay ışıklar yavruları nasıl etkiler?", "options": {"a": "Büyümelerini sağlar", "b": "Deniz yerine karaya yönelmelerine neden olur", "c": "Erken çıkmalarına neden olur", "d": "Etkilemez"}, "answer": "b"},
-            {"id": "k1_q8", "text": "Türkiye'deki yumurtlama sahillerinden biri hangisidir?", "options": {"a": "Kızkumu", "b": "Dalyan", "c": "Ölüdeniz", "d": "Çeşme"}, "answer": "b"},
-            {"id": "k1_q9", "text": "Metnin ana düşüncesi nedir?", "options": {"a": "Kaplumbağalar çok hızlı yüzer", "b": "Deniz kaplumbağaları ilginç canlılardır ve korunmaya ihtiyaçları vardır", "c": "Türkiye'nin sahilleri güzeldir", "d": "Plastik poşetler yasaklanmalıdır"}, "answer": "b"},
-            {"id": "k1_q10", "text": "Yumurtalar ne kadar sürede yavruya dönüşür?", "options": {"a": "Bir hafta", "b": "İki hafta", "c": "Bir ay", "d": "İki ay"}, "answer": "d"},
-        ],
-    },
-]
-
-K2_PASSAGES = [
-    {
-        "id": "k2_p1",
-        "title": "Yapay Zekâ ve Geleceğimiz",
-        "text": (
-            "Yapay zekâ, son yılların en çok konuşulan teknolojik gelişmesidir. Bilgisayarların insan gibi "
-            "düşünmesi, öğrenmesi ve karar vermesi anlamına gelen bu kavram, hayatımızın birçok alanına girmiştir. "
-            "Telefonlarımızdaki sesli asistanlar, sosyal medyadaki öneri algoritmaları ve otomobillerdeki sürücü "
-            "destek sistemleri yapay zekânın günlük hayattaki örneklerindendir.\n\n"
-            "Yapay zekânın temelinde makine öğrenmesi adı verilen bir yöntem bulunur. Bu yöntemde bilgisayarlara "
-            "büyük miktarda veri verilir ve bilgisayar bu verilerden kalıplar çıkararak kendi kendine öğrenir. "
-            "Örneğin bir yapay zekâya milyonlarca kedi fotoğrafı gösterildiğinde, bir süre sonra daha önce hiç "
-            "görmediği bir kedi fotoğrafını tanıyabilir hâle gelir.\n\n"
-            "Tıp alanında yapay zekâ büyük bir devrim yaratmaktadır. Röntgen ve MR görüntülerini analiz ederek "
-            "hastalıkları doktorlardan daha erken tespit edebilen sistemler geliştirilmiştir. Eğitim alanında "
-            "ise her öğrencinin seviyesine göre özelleştirilmiş ders içerikleri sunan akıllı sistemler "
-            "kullanılmaya başlanmıştır.\n\n"
-            "Ancak yapay zekânın bazı riskleri de bulunmaktadır. İş gücü piyasasında birçok mesleğin ortadan "
-            "kalkacağı öngörülmektedir. Uzmanlar, yapay zekânın insanların yerini almayacağını, aksine onlarla "
-            "birlikte çalışacağını düşünmektedir. Bu nedenle eleştirel düşünme, yaratıcılık ve duygusal zekâ "
-            "gibi insana özgü becerilerin önemi daha da artacaktır."
-        ),
-        "questions": [
-            {"id": "k2_q1", "text": "Makine öğrenmesi nasıl çalışır?", "options": {"a": "Tek tek kurallar yazılır", "b": "Büyük verilerden kalıplar çıkararak kendi kendine öğrenir", "c": "İnsan beyni bağlanır", "d": "Bilgisayarlar birbirleriyle konuşur"}, "answer": "b"},
-            {"id": "k2_q2", "text": "Tıpta yapay zekânın katkısı nedir?", "options": {"a": "Ameliyat yapmak", "b": "Hastalıkları erken tespit etmek", "c": "Doktorların yerini almak", "d": "Hastane yönetimi"}, "answer": "b"},
-            {"id": "k2_q3", "text": "AI tarafından devralınamayacak iş hangisidir?", "options": {"a": "Veri girişi", "b": "Fabrika işçiliği", "c": "Yaratıcı sanat", "d": "Çeviri"}, "answer": "c"},
-            {"id": "k2_q4", "text": "Gelecekte en başarılı olacaklar kimlerdir?", "options": {"a": "En hızlı yazabilenler", "b": "Yapay zekâyı etkili kullanabilenler", "c": "En çok dil bilenler", "d": "Robotlardan kaçınanlar"}, "answer": "b"},
-            {"id": "k2_q5", "text": "Eğitimde AI nasıl kullanılır?", "options": {"a": "Maaş hesaplamak", "b": "Öğrenciye özel ders içerikleri sunmak", "c": "Sınav sızdırmak", "d": "Notları yükseltmek"}, "answer": "b"},
-            {"id": "k2_q6", "text": "AI'ın öğrenmesi insandan nasıl farklıdır?", "options": {"a": "Daha yavaş", "b": "Hiç farklı değil", "c": "Daha az doğru", "d": "Çok daha hızlı"}, "answer": "d"},
-            {"id": "k2_q7", "text": "Günlük yaşamda AI örneği nedir?", "options": {"a": "Kalem", "b": "Sesli asistan", "c": "Bisiklet", "d": "Kitap"}, "answer": "b"},
-            {"id": "k2_q8", "text": "Metnin son paragrafındaki mesaj nedir?", "options": {"a": "AI tehlikelidir", "b": "Herkes programlama öğrenmeli", "c": "İnsana özgü becerilerin önemi artacak", "d": "AI yasaklanmalı"}, "answer": "c"},
-            {"id": "k2_q9", "text": "AI risklerinden biri nedir?", "options": {"a": "Elektrik kesilmesi", "b": "Bazı mesleklerin ortadan kalkması", "c": "Havanın kirlenmesi", "d": "Kitapların yok olması"}, "answer": "b"},
-            {"id": "k2_q10", "text": "AI bir kedi fotoğrafını nasıl tanır?", "options": {"a": "Birisi söyler", "b": "Milyonlarca fotoğraftan kalıplar öğrenerek", "c": "Kedi sesini duyar", "d": "İnternetten bakar"}, "answer": "b"},
-        ],
-    },
-]
-
-ALL_PASSAGES = {
-    "kademe_1": K1_PASSAGES,
-    "kademe_2": K2_PASSAGES,
-}
-
-
-# ============================================================
-# YARDIMCI FONKSİYONLAR
-# ============================================================
-
-def count_words(text):
-    return len(text.split())
-
-def get_passage_for_grade(grade):
-    kademe = grade_to_kademe(grade)
-    passages = ALL_PASSAGES.get(kademe, K1_PASSAGES)
-    return passages[0], kademe
-
-def get_wpm_norms(kademe):
-    return WPM_NORMS.get(kademe, WPM_NORMS["kademe_1"])
-
-def classify_wpm(wpm, kademe):
-    norms = get_wpm_norms(kademe)
-    if wpm < norms["cok_yavas"]:
-        return "cok_yavas", "Çok Yavaş", "🔴", "Okuma hızı yaş grubunun altında."
-    elif wpm < norms["yavas"]:
-        return "yavas", "Yavaş", "🟠", "Okuma hızı ortalamanın altında."
-    elif wpm < norms["hizli"]:
-        return "ortalama", "Ortalama", "🟡", "Okuma hızı yaş grubuna uygun."
-    elif wpm < norms["cok_hizli"]:
-        return "hizli", "Hızlı", "🔵", "Okuma hızı ortalamanın üzerinde."
-    else:
-        return "cok_hizli", "Çok Hızlı", "🟢", "Mükemmel okuma hızı!"
-
-def calculate_speed_reading(answers, passage_data, reading_time_seconds, kademe):
-    word_count = count_words(passage_data["text"])
-    reading_time_minutes = reading_time_seconds / 60.0
-    wpm = round(word_count / max(reading_time_minutes, 0.01))
-    speed_key, speed_label, speed_emoji, speed_comment = classify_wpm(wpm, kademe)
-    norms = get_wpm_norms(kademe)
-
-    questions = passage_data["questions"]
-    correct = 0
-    detail = []
-    for q in questions:
-        user_ans = answers.get(q["id"], "")
-        is_correct = (user_ans == q["answer"])
-        if is_correct: correct += 1
-        detail.append({"id": q["id"], "text": q["text"], "user": user_ans, "correct_answer": q["answer"], "is_correct": is_correct})
-
-    total = len(questions)
-    comprehension_pct = round(correct / max(total, 1) * 100, 1)
-
-    if comprehension_pct >= 80: comp_level, comp_emoji = "Çok İyi", "🟢"
-    elif comprehension_pct >= 60: comp_level, comp_emoji = "İyi", "🔵"
-    elif comprehension_pct >= 40: comp_level, comp_emoji = "Orta", "🟡"
-    elif comprehension_pct >= 20: comp_level, comp_emoji = "Düşük", "🟠"
-    else: comp_level, comp_emoji = "Çok Düşük", "🔴"
-
-    max_expected = norms["cok_hizli"] * 1.3
-    speed_normalized = min(wpm / max_expected * 100, 100)
-    effective_score = round(speed_normalized * 0.4 + comprehension_pct * 0.6, 1)
-
-    if effective_score >= 80: eff_level, eff_emoji = "Mükemmel", "🟢"
-    elif effective_score >= 65: eff_level, eff_emoji = "İyi", "🔵"
-    elif effective_score >= 50: eff_level, eff_emoji = "Orta", "🟡"
-    elif effective_score >= 35: eff_level, eff_emoji = "Gelişime Açık", "🟠"
-    else: eff_level, eff_emoji = "Destek Gerekli", "🔴"
-
-    if wpm >= norms["hizli"] and comprehension_pct >= 70:
-        profile = "⚡ Hızlı & Anlayan Okuyucu"
-        profile_desc = "Hem hızlı okuyor hem de anlıyorsun!"
-    elif wpm >= norms["hizli"] and comprehension_pct < 50:
-        profile = "💨 Hızlı Ama Yüzeysel"
-        profile_desc = "Hızlısın ama anlamanı geliştirmen gerek."
-    elif wpm < norms["yavas"] and comprehension_pct >= 70:
-        profile = "🔍 Yavaş Ama Derinlemesine"
-        profile_desc = "Yavaş ama iyi anlıyorsun."
-    elif wpm < norms["yavas"] and comprehension_pct < 50:
-        profile = "📖 Destek İhtiyacı"
-        profile_desc = "Düzenli okuma alışkanlığı edinmek öncelikli."
-    else:
-        profile = "📚 Dengeli Okuyucu"
-        profile_desc = "Dengeli bir okuma profilen var."
-
-    return {
-        "passage_title": passage_data["title"], "word_count": word_count,
-        "reading_time_seconds": round(reading_time_seconds, 1),
-        "reading_time_minutes": round(reading_time_minutes, 2),
-        "wpm": wpm, "speed_key": speed_key, "speed_label": speed_label,
-        "speed_emoji": speed_emoji, "speed_comment": speed_comment,
-        "norms": norms, "kademe": kademe,
-        "kademe_label": KADEME_LABELS.get(kademe, ""),
-        "correct": correct, "total": total, "comprehension_pct": comprehension_pct,
-        "comp_level": comp_level, "comp_emoji": comp_emoji, "detail": detail,
-        "effective_score": effective_score, "eff_level": eff_level, "eff_emoji": eff_emoji,
-        "profile": profile, "profile_desc": profile_desc,
-    }
-
-def generate_speed_reading_report(scores):
-    norms = scores["norms"]
-    def bar(pct):
-        filled = int(pct / 5)
-        return "█" * filled + "░" * (20 - filled)
-
-    report = f"""# 📖 Hızlı Okuma & Anlama Raporu
-
-## 📋 Test Bilgileri
-| Bilgi | Değer |
-|-------|-------|
-| Metin | {scores['passage_title']} |
-| Kademe | {scores['kademe_label']} |
-| Kelime Sayısı | {scores['word_count']} |
-| Okuma Süresi | {scores['reading_time_seconds']} sn ({scores['reading_time_minutes']} dk) |
-
----
-
-## ⏱️ Okuma Hızı: {scores['speed_emoji']} {scores['wpm']} Kelime/Dakika — {scores['speed_label']}
-
-{scores['speed_comment']}
-
-## 🧠 Anlama: {scores['comp_emoji']} %{scores['comprehension_pct']} — {scores['comp_level']}
-
-{scores['correct']}/{scores['total']} doğru cevap
-
-{bar(scores['comprehension_pct'])} %{scores['comprehension_pct']}
-
-## 🎯 Etkili Okuma: {scores['eff_emoji']} %{scores['effective_score']} — {scores['eff_level']}
-
-## 🧑‍🎓 Profil: {scores['profile']}
-
-{scores['profile_desc']}
-
----
-
-## 📊 Soru Detayları
-
-| # | Sonuç | Soru |
-|---|-------|------|
 """
-    for i, d in enumerate(scores["detail"], 1):
-        icon = "✅" if d["is_correct"] else "❌"
-        report += f"| {i} | {icon} | {d['text'][:60]}... |\n"
+Hızlı Okuma Testi Motoru
+— Zamanlı okuma + anlama soruları + skor hesaplama
+"""
 
-    return report.strip()
+# ─── HIZLI OKUMA METİNLERİ VE SORULARI ───────────────────────────────────────
+
+HIZLI_OKUMA_VERILERI = {
+    1: {
+        "baslik": "Bahçedeki Hayvanlar",
+        "metin": (
+            "Elif'in evinin bahçesinde hayvanlar vardı. Bir köpek, iki kedi ve üç tavuk yaşardı. "
+            "Köpeğin adı Karabaş'tı. Kedilerin biri beyaz, diğeri siyahtı. Tavuklar her gün yumurta yapardı. "
+            "Elif her sabah tavukların yumurtalarını toplardı. Annesi bu yumurtalarla kahvaltı hazırlardı. "
+            "Karabaş bahçeyi beklerdi. Kediler güneşte uyurdu. Elif hayvanlarını çok severdi."
+        ),
+        "sorular": [
+            {"soru": "Elif'in bahçesinde kaç tür hayvan vardı?", "secenekler": ["2", "3", "4", "5"], "dogru": "3"},
+            {"soru": "Köpeğin adı neydi?", "secenekler": ["Pamuk", "Karabaş", "Boncuk", "Çomar"], "dogru": "Karabaş"},
+            {"soru": "Bahçede kaç tavuk vardı?", "secenekler": ["1", "2", "3", "4"], "dogru": "3"},
+            {"soru": "Kedilerin rengi neydi?", "secenekler": ["İkisi beyaz", "Beyaz ve siyah", "İkisi siyah", "Beyaz ve gri"], "dogru": "Beyaz ve siyah"},
+            {"soru": "Elif her sabah ne toplardı?", "secenekler": ["Çiçek", "Meyve", "Yumurta", "Sebze"], "dogru": "Yumurta"},
+            {"soru": "Annesi yumurtalarla ne hazırlardı?", "secenekler": ["Akşam yemeği", "Öğle yemeği", "Kahvaltı", "Pasta"], "dogru": "Kahvaltı"},
+            {"soru": "Karabaş ne yapardı?", "secenekler": ["Uyurdu", "Bahçeyi beklerdi", "Oynardı", "Koşardı"], "dogru": "Bahçeyi beklerdi"},
+            {"soru": "Kediler nerede uyurdu?", "secenekler": ["Evde", "Güneşte", "Ağaçta", "Bahçede"], "dogru": "Güneşte"},
+            {"soru": "Bahçede kaç kedi vardı?", "secenekler": ["1", "2", "3", "4"], "dogru": "2"},
+            {"soru": "Elif hayvanlarına ne hissediyordu?", "secenekler": ["Korkardı", "Sevmezdi", "Çok severdi", "İlgilenmezdi"], "dogru": "Çok severdi"},
+        ],
+    },
+    2: {
+        "baslik": "Yağmurlu Gün",
+        "metin": (
+            "Bugün hava çok bulutluydu. Mehmet okula giderken yağmur başladı. Şemsiyesini almayı unutmuştu. "
+            "Koşarak okulun kapısına ulaştı ama ıslanmıştı. Öğretmeni onu görünce endişelendi. "
+            "Mehmet'e kuru bir havlu verdi. Mehmet saçlarını kuruladı. Teneffüste arkadaşları bahçeye çıktı "
+            "ama Mehmet sınıfta kaldı. Pencereden yağmuru seyretti. Yağmur damlalarının cama vuruşunu dinledi. "
+            "Okul çıkışında güneş açmıştı. Gökyüzünde güzel bir gökkuşağı vardı. Mehmet gökkuşağını "
+            "görünce çok sevindi. Eve gülerek döndü."
+        ),
+        "sorular": [
+            {"soru": "Hava nasıldı?", "secenekler": ["Güneşli", "Bulutlu", "Karlı", "Rüzgârlı"], "dogru": "Bulutlu"},
+            {"soru": "Mehmet neyi unutmuştu?", "secenekler": ["Çantasını", "Şemsiyesini", "Ödevini", "Montunu"], "dogru": "Şemsiyesini"},
+            {"soru": "Öğretmeni ona ne verdi?", "secenekler": ["Mont", "Çay", "Havlu", "Ekmek"], "dogru": "Havlu"},
+            {"soru": "Teneffüste Mehmet ne yaptı?", "secenekler": ["Bahçeye çıktı", "Sınıfta kaldı", "Uyudu", "Kitap okudu"], "dogru": "Sınıfta kaldı"},
+            {"soru": "Mehmet pencereden ne seyretti?", "secenekler": ["Kuşları", "Arabalar", "Yağmuru", "Arkadaşlarını"], "dogru": "Yağmuru"},
+            {"soru": "Okul çıkışında hava nasıldı?", "secenekler": ["Yağmurlu", "Güneş açmıştı", "Bulutlu", "Karlı"], "dogru": "Güneş açmıştı"},
+            {"soru": "Gökyüzünde ne vardı?", "secenekler": ["Bulut", "Yıldız", "Gökkuşağı", "Uçak"], "dogru": "Gökkuşağı"},
+            {"soru": "Mehmet nereye gidiyordu?", "secenekler": ["Parka", "Okula", "Markete", "Eve"], "dogru": "Okula"},
+            {"soru": "Mehmet okula nasıl ulaştı?", "secenekler": ["Yürüyerek", "Koşarak", "Arabayla", "Otobüsle"], "dogru": "Koşarak"},
+            {"soru": "Mehmet eve nasıl döndü?", "secenekler": ["Ağlayarak", "Koşarak", "Gülerek", "Üzülerek"], "dogru": "Gülerek"},
+        ],
+    },
+    3: {
+        "baslik": "Karıncanın Dersi",
+        "metin": (
+            "Küçük Ahmet yazın sıcak bir gününde parkta oturuyordu. Bir dondurma yiyordu ve etrafı seyrediyordu. "
+            "Birden yerde uzun bir karınca sırasını fark etti. Karıncalar bir ekmek kırıntısını taşımaya çalışıyordu. "
+            "Kırıntı karıncaların boyutuna göre çok büyüktü. Ama karıncalar pes etmiyordu. Bazıları kırıntıyı "
+            "iterken, bazıları çekerdi. Birlikte çalışarak kırıntıyı yuvalarına doğru taşıdılar.\n\n"
+            "Ahmet bu manzarayı uzun süre izledi. Karıncaların birlikte çalışmasına hayran kaldı. Eve döndüğünde "
+            "annesine karıncaları anlattı. Annesi gülümsedi ve dedi ki: Karıncalar bize takım çalışmasının "
+            "gücünü öğretiyor. Tek başına taşıyamadıkları şeyleri birlikte taşıyabiliyorlar. Ahmet o gün "
+            "önemli bir ders öğrendi: Birlikte çalışmak, en zor işleri bile kolaylaştırır."
+        ),
+        "sorular": [
+            {"soru": "Ahmet neredeydi?", "secenekler": ["Evde", "Okulda", "Parkta", "Bahçede"], "dogru": "Parkta"},
+            {"soru": "Ahmet ne yiyordu?", "secenekler": ["Sandviç", "Dondurma", "Simit", "Çikolata"], "dogru": "Dondurma"},
+            {"soru": "Karıncalar ne taşıyordu?", "secenekler": ["Yaprak", "Ekmek kırıntısı", "Şeker", "Böcek"], "dogru": "Ekmek kırıntısı"},
+            {"soru": "Kırıntı karıncalara göre nasıldı?", "secenekler": ["Küçüktü", "Çok büyüktü", "Hafifti", "Tam uygundu"], "dogru": "Çok büyüktü"},
+            {"soru": "Karıncalar ne yapıyordu?", "secenekler": ["Pes ettiler", "Birlikte çalışıyordu", "Kavga ediyordu", "Uyuyordu"], "dogru": "Birlikte çalışıyordu"},
+            {"soru": "Ahmet kırıntıyı nereye taşıdıklarını gördü?", "secenekler": ["Ağaca", "Suya", "Yuvalarına", "Çöpe"], "dogru": "Yuvalarına"},
+            {"soru": "Ahmet eve dönünce kime anlattı?", "secenekler": ["Babasına", "Annesine", "Kardeşine", "Arkadaşına"], "dogru": "Annesine"},
+            {"soru": "Annesi ne dedi?", "secenekler": ["Önemsiz", "Takım çalışmasının gücü", "Karıncalar zararlı", "Parkta oturma"], "dogru": "Takım çalışmasının gücü"},
+            {"soru": "Mevsim neydi?", "secenekler": ["Kış", "İlkbahar", "Yaz", "Sonbahar"], "dogru": "Yaz"},
+            {"soru": "Ahmet o gün ne öğrendi?", "secenekler": ["Dondurma yemeyi", "Birlikte çalışmanın gücünü", "Karınca türlerini", "Park kurallarını"], "dogru": "Birlikte çalışmanın gücünü"},
+        ],
+    },
+    4: {
+        "baslik": "Deniz Feneri Bekçisi",
+        "metin": (
+            "Yıllar önce küçük bir kıyı kasabasında yaşlı bir deniz feneri bekçisi yaşardı. Adı Hasan Dede'ydi. "
+            "Her akşam fener kulesine çıkar ve ışığı yakardı. Bu ışık, geceleyin denizde yol alan gemilere rehberlik "
+            "ederdi. Fırtınalı gecelerde bile Hasan Dede görevini asla ihmal etmezdi.\n\n"
+            "Bir kış gecesi korkunç bir fırtına koptu. Rüzgâr uğulduyordu, dalgalar kayalıklara çarpıyordu. "
+            "Hasan Dede fenerin ışığının söndüğünü fark etti. Hemen kuleye koştu. Merdivenleri tırmanırken "
+            "rüzgâr onu sallıyordu ama durmadı. Feneri tekrar yaktığında, uzakta bir geminin ışıklarını gördü. "
+            "Gemi tehlikeli kayalıklara doğru ilerliyordu. Fenerin ışığı sayesinde kaptan rotasını değiştirdi "
+            "ve gemi kurtuldu.\n\n"
+            "Ertesi gün geminin kaptanı kasabaya gelip Hasan Dede'yi buldu. Elini sıktı ve teşekkür etti. "
+            "Hasan Dede mütevazı bir şekilde gülümsedi. O gece yine fenerin yanına çıktı, çünkü denizde "
+            "her zaman birileri ışığa ihtiyaç duyardı."
+        ),
+        "sorular": [
+            {"soru": "Hasan Dede ne iş yapardı?", "secenekler": ["Balıkçı", "Fener bekçisi", "Kaptan", "Öğretmen"], "dogru": "Fener bekçisi"},
+            {"soru": "Fenerin görevi neydi?", "secenekler": ["Kasabayı aydınlatmak", "Gemilere rehberlik etmek", "Balıkları çekmek", "Fırtınayı durdurmak"], "dogru": "Gemilere rehberlik etmek"},
+            {"soru": "Fırtına ne zaman koptu?", "secenekler": ["Yaz gecesi", "Kış gecesi", "Sonbahar sabahı", "İlkbahar akşamı"], "dogru": "Kış gecesi"},
+            {"soru": "Fenerin ışığına ne oldu?", "secenekler": ["Parladı", "Söndü", "Kırıldı", "Zayıfladı"], "dogru": "Söndü"},
+            {"soru": "Hasan Dede merdivenleri tırmanırken ne oluyordu?", "secenekler": ["Yağmur yağıyordu", "Rüzgâr onu sallıyordu", "Kar yağıyordu", "Deprem oluyordu"], "dogru": "Rüzgâr onu sallıyordu"},
+            {"soru": "Gemi nereye ilerliyordu?", "secenekler": ["Limana", "Açık denize", "Tehlikeli kayalıklara", "Başka bir kasabaya"], "dogru": "Tehlikeli kayalıklara"},
+            {"soru": "Kaptan ne yaptı?", "secenekler": ["Durdu", "Rotasını değiştirdi", "Geri döndü", "Yardım istedi"], "dogru": "Rotasını değiştirdi"},
+            {"soru": "Ertesi gün kaptan ne yaptı?", "secenekler": ["Gitti", "Teşekkür etti", "Şikâyet etti", "Hediye gönderdi"], "dogru": "Teşekkür etti"},
+            {"soru": "Hasan Dede fırtınada ne gösterdi?", "secenekler": ["Korku", "Sorumluluk", "Kayıtsızlık", "Heyecan"], "dogru": "Sorumluluk"},
+            {"soru": "Hikâyenin ana mesajı nedir?", "secenekler": ["Fırtına tehlikelidir", "Görev bilinci önemlidir", "Gemiler hızlı gider", "Kış soğuktur"], "dogru": "Görev bilinci önemlidir"},
+        ],
+    },
+    5: {
+        "baslik": "Uzay İstasyonunda Bir Gün",
+        "metin": (
+            "Astronot Zeynep, Uluslararası Uzay İstasyonu'nda uyandı. Yer çekimi olmadığı için uyku tulumunun "
+            "içinde havada süzülüyordu. Saati kontrol etti: sabah altı. Dünya'nın bir tarafı güneş ışığıyla "
+            "aydınlanıyordu, diğer tarafı karanlıktı. Uzay istasyonu doksan dakikada Dünya'nın etrafında bir tur "
+            "atıyordu, bu yüzden bir günde on altı kez gün doğumu görebiliyordu.\n\n"
+            "Kahvaltısını hazırladı. Uzayda yemek yemek ilginç bir deneyimdi. Su damlacıkları havada yüzüyordu "
+            "ve yiyecekleri özel kaplardan sıkarak yiyordu. Kahvaltıdan sonra laboratuvara geçti. Bugünkü "
+            "görevi bitkilerin uzayda nasıl büyüdüğünü incelemekti. Küçük bir serada domates fideleri "
+            "yetiştiriyordu. Yer çekimi olmadan köklerin farklı yönlere uzandığını gözlemledi.\n\n"
+            "Öğleden sonra Dünya ile bağlantı kurdu. Bir okuldaki öğrencilerin sorularını yanıtladı. Çocuklar "
+            "uzayda nasıl yıkandığını, uyuduğunu ve eğlendiğini merak ediyordu. Zeynep onlara uzayın ne kadar "
+            "büyüleyici olduğunu anlattı. Akşam pencereden Dünya'yı seyrederken, mavi gezegenin ne kadar "
+            "güzel ve kırılgan olduğunu bir kez daha hissetti."
+        ),
+        "sorular": [
+            {"soru": "Zeynep nerede uyandı?", "secenekler": ["Evde", "Uçakta", "Uzay istasyonunda", "Okulda"], "dogru": "Uzay istasyonunda"},
+            {"soru": "Neden havada süzülüyordu?", "secenekler": ["Uçuyordu", "Yer çekimi yoktu", "Rüzgâr vardı", "Parakütü vardı"], "dogru": "Yer çekimi yoktu"},
+            {"soru": "İstasyon Dünya etrafında ne kadar sürede dönüyor?", "secenekler": ["60 dakika", "90 dakika", "120 dakika", "24 saat"], "dogru": "90 dakika"},
+            {"soru": "Bir günde kaç kez gün doğumu görebiliyordu?", "secenekler": ["1", "8", "16", "24"], "dogru": "16"},
+            {"soru": "Uzayda su nasıldı?", "secenekler": ["Donuyordu", "Havada yüzüyordu", "Buharlaşıyordu", "Kayboluyordu"], "dogru": "Havada yüzüyordu"},
+            {"soru": "Zeynep'in laboratuvar görevi neydi?", "secenekler": ["Tamir", "Bitki incelemek", "Yemek yapmak", "Spor yapmak"], "dogru": "Bitki incelemek"},
+            {"soru": "Ne yetiştiriyordu?", "secenekler": ["Çilek", "Domates", "Patates", "Biber"], "dogru": "Domates"},
+            {"soru": "Kökler uzayda nasıl uzanıyordu?", "secenekler": ["Aşağı doğru", "Yukarı doğru", "Farklı yönlere", "Hiç uzanmıyordu"], "dogru": "Farklı yönlere"},
+            {"soru": "Öğleden sonra ne yaptı?", "secenekler": ["Uyudu", "Öğrencilerin sorularını yanıtladı", "Yürüyüş yaptı", "Film izledi"], "dogru": "Öğrencilerin sorularını yanıtladı"},
+            {"soru": "Dünya'yı nasıl tanımladı?", "secenekler": ["Büyük ve sert", "Mavi, güzel ve kırılgan", "Küçük ve soğuk", "Karanlık ve ürkütücü"], "dogru": "Mavi, güzel ve kırılgan"},
+        ],
+    },
+    6: {
+        "baslik": "Eski Mısır'ın Gizemi",
+        "metin": (
+            "Mısır piramitleri, insanlık tarihinin en etkileyici yapılarından biridir. Yaklaşık dört bin beş yüz "
+            "yıl önce inşa edilen Büyük Giza Piramidi, uzun süre dünyanın en yüksek yapısı olma unvanını korumuştur. "
+            "Bu devasa yapı, yaklaşık iki milyon üç yüz bin taş bloktan oluşur ve her bir blok ortalama iki buçuk "
+            "ton ağırlığındadır.\n\n"
+            "Piramitlerin nasıl inşa edildiği hâlâ tartışmalıdır. Bazı araştırmacılar rampa sistemleri kullanıldığını "
+            "düşünürken, diğerleri iç rampa teorisini savunur. Kesin olan şu ki, bu yapılar dönemin matematik, "
+            "astronomi ve mühendislik bilgisinin ne kadar ileri olduğunu göstermektedir. Piramitlerin kenarları "
+            "neredeyse mükemmel bir şekilde kuzeye hizalanmıştır.\n\n"
+            "Piramitler sadece birer mezar değildi. Firavunların ahiret hayatı için hazırlanan bu yapılarda "
+            "yiyecekler, mücevherler, mobilyalar ve hatta hizmetkâr heykelleri bulunurdu. Mısırlılar ölümden "
+            "sonraki yaşama inandıkları için cesetleri mumyalıyorlardı. Mumyalama süreci yaklaşık yetmiş gün "
+            "sürerdi ve özel rahipler tarafından gerçekleştirilirdi.\n\n"
+            "Bugün piramitler UNESCO Dünya Mirası Listesinde yer alır ve her yıl milyonlarca turist tarafından "
+            "ziyaret edilir. Antik Mısır medeniyeti, bize insanın inanç, bilim ve kararlılıkla neler "
+            "başarabileceğini gösteren muhteşem bir mirastır."
+        ),
+        "sorular": [
+            {"soru": "Büyük Giza Piramidi kaç yıl önce inşa edildi?", "secenekler": ["2500", "3500", "4500", "5500"], "dogru": "4500"},
+            {"soru": "Piramit kaç taş bloktan oluşur?", "secenekler": ["1.3 milyon", "2.3 milyon", "3.3 milyon", "4.3 milyon"], "dogru": "2.3 milyon"},
+            {"soru": "Her taş blok ortalama kaç ton?", "secenekler": ["1.5 ton", "2.5 ton", "3.5 ton", "5 ton"], "dogru": "2.5 ton"},
+            {"soru": "Piramitlerin kenarları neye hizalıdır?", "secenekler": ["Güneye", "Kuzeye", "Doğuya", "Batıya"], "dogru": "Kuzeye"},
+            {"soru": "Piramitler kimin için yapılmıştır?", "secenekler": ["Halk", "Askerler", "Firavunlar", "Rahipler"], "dogru": "Firavunlar"},
+            {"soru": "Piramitlerin içinde ne bulunurdu?", "secenekler": ["Sadece mumya", "Yiyecek ve mücevher", "Hiçbir şey", "Silahlar"], "dogru": "Yiyecek ve mücevher"},
+            {"soru": "Mumyalama süreci kaç gün sürerdi?", "secenekler": ["30 gün", "50 gün", "70 gün", "90 gün"], "dogru": "70 gün"},
+            {"soru": "Mumyalama kim tarafından yapılırdı?", "secenekler": ["Askerler", "Özel rahipler", "Firavunlar", "Halk"], "dogru": "Özel rahipler"},
+            {"soru": "Piramitler hangi listede yer alır?", "secenekler": ["Forbes", "UNESCO Dünya Mirası", "Guinness", "National Geographic"], "dogru": "UNESCO Dünya Mirası"},
+            {"soru": "Metnin ana fikri nedir?", "secenekler": ["Piramitler güzeldir", "Mısır medeniyetinin ileri düzeyi", "Turizm önemlidir", "Mumyalama ilginçtir"], "dogru": "Mısır medeniyetinin ileri düzeyi"},
+        ],
+    },
+    7: {
+        "baslik": "Beyin ve Öğrenme",
+        "metin": (
+            "İnsan beyni, evrendeki en karmaşık yapılardan biridir. Yaklaşık yüz milyar sinir hücresinden oluşan "
+            "beyin, bu hücrelerin arasındaki trilyonlarca bağlantıyla çalışır. Her yeni bilgi öğrendiğimizde, "
+            "beynimizde yeni sinaptik bağlantılar oluşur. Bu süreç nöroplastisite olarak adlandırılır ve "
+            "beynimizin yaşam boyu değişip gelişebileceği anlamına gelir.\n\n"
+            "Araştırmalar, öğrenmenin en etkili yollarının pasif dinleme olmadığını gösteriyor. Aktif öğrenme, "
+            "yani bilgiyi sorgulamak, tartışmak ve uygulamak, beynin daha güçlü bağlantılar kurmasını sağlar. "
+            "Bir konuyu başkasına öğretmek, öğrenmenin en etkili yollarından biridir. Buna öğretme etkisi denir.\n\n"
+            "Uyku, öğrenme için kritik öneme sahiptir. Gün içinde öğrendiğimiz bilgiler, uyku sırasında uzun "
+            "süreli belleğe aktarılır. Yeterli uyumayan öğrencilerin öğrenme kapasitesi önemli ölçüde düşer. "
+            "Egzersiz de beyin sağlığı için vazgeçilmezdir. Fiziksel aktivite beyne daha fazla kan ve oksijen "
+            "taşır, bu da yeni sinir hücrelerinin oluşmasını destekler.\n\n"
+            "Stres ise öğrenmenin düşmanıdır. Yüksek stres altında kortizol hormonu salgılanır ve bu hormon "
+            "bellek oluşumunu engeller. Bu nedenle sınav kaygısı yaşayan öğrenciler, bildikleri şeyleri bile "
+            "hatırlayamayabilir. Nefes egzersizleri, düzenli çalışma ve olumlu düşünme stresi azaltmaya yardımcı olur.\n\n"
+            "Özetle, beynimiz inanılmaz bir öğrenme makinesidir. Onu doğru beslemek, yeterince uyumak, "
+            "aktif öğrenme yöntemlerini kullanmak ve stresi yönetmek, akademik başarının anahtarlarıdır."
+        ),
+        "sorular": [
+            {"soru": "İnsan beyninde kaç sinir hücresi vardır?", "secenekler": ["1 milyar", "10 milyar", "100 milyar", "1 trilyon"], "dogru": "100 milyar"},
+            {"soru": "Yeni bağlantılar oluşması sürecine ne denir?", "secenekler": ["Nöroloji", "Nöroplastisite", "Nörotransmisyon", "Nörojenez"], "dogru": "Nöroplastisite"},
+            {"soru": "En etkili öğrenme yolu hangisidir?", "secenekler": ["Pasif dinleme", "Aktif öğrenme", "Ezber", "Video izleme"], "dogru": "Aktif öğrenme"},
+            {"soru": "Öğretme etkisi nedir?", "secenekler": ["Öğretmen olmak", "Başkasına öğreterek öğrenmek", "Kitap okumak", "Not tutmak"], "dogru": "Başkasına öğreterek öğrenmek"},
+            {"soru": "Uyku sırasında bilgi nereye aktarılır?", "secenekler": ["Kısa süreli bellek", "Uzun süreli bellek", "Bilinçaltı", "Refleks bellek"], "dogru": "Uzun süreli bellek"},
+            {"soru": "Egzersiz beyne ne sağlar?", "secenekler": ["Daha az enerji", "Daha fazla kan ve oksijen", "Daha az bağlantı", "Daha az uyku"], "dogru": "Daha fazla kan ve oksijen"},
+            {"soru": "Stres altında hangi hormon salgılanır?", "secenekler": ["Dopamin", "Serotonin", "Kortizol", "Adrenalin"], "dogru": "Kortizol"},
+            {"soru": "Kortizol ne yapar?", "secenekler": ["Belleği güçlendirir", "Bellek oluşumunu engeller", "Uyku düzenler", "Mutlu eder"], "dogru": "Bellek oluşumunu engeller"},
+            {"soru": "Sınav kaygısı ne yapar?", "secenekler": ["Daha iyi hatırlatır", "Bilinenlerin hatırlanmasını zorlaştırır", "Konsantrasyonu artırır", "Hiçbir etkisi yok"], "dogru": "Bilinenlerin hatırlanmasını zorlaştırır"},
+            {"soru": "Akademik başarının anahtarı hangisi DEĞİLDİR?", "secenekler": ["Yeterli uyku", "Aktif öğrenme", "Yüksek stres", "Egzersiz"], "dogru": "Yüksek stres"},
+        ],
+    },
+    8: {
+        "baslik": "İklim Değişikliği ve Geleceğimiz",
+        "metin": (
+            "Dünya'nın ortalama sıcaklığı sanayi devriminden bu yana yaklaşık bir virgül bir derece artmıştır. "
+            "Bu rakam küçük görünse de etkileri devasa boyutlardadır. Kutup buzulları eriyor, deniz seviyeleri "
+            "yükseliyor, aşırı hava olayları sıklaşıyor ve ekosistemler bozuluyor. Bilim insanları, bu "
+            "değişikliklerin büyük ölçüde insan faaliyetlerinden kaynaklandığı konusunda hemfikir.\n\n"
+            "Fosil yakıtların yakılması, ormansızlaşma ve endüstriyel süreçler atmosfere büyük miktarda sera "
+            "gazı salıyor. Bu gazlar güneşten gelen ısıyı atmosferde hapsederek sera etkisi yaratıyor. "
+            "Karbondioksit, metan ve diazot monoksit başlıca sera gazlarıdır. Özellikle karbondioksit "
+            "seviyesi, son sekiz yüz bin yılın en yüksek düzeyine ulaşmıştır.\n\n"
+            "İklim değişikliğinin etkileri eşit dağılmıyor. Küçük ada devletleri yükselen deniz seviyesi "
+            "nedeniyle varlık tehlikesiyle karşı karşıya. Afrika ve Güney Asya'daki tarım toplulukları "
+            "kuraklık ve sel felaketlerinden en çok etkilenen gruplar arasında. Paradoks olarak, iklim "
+            "değişikliğine en az katkıda bulunan ülkeler en çok zarar görüyor.\n\n"
+            "Çözümler hem bireysel hem de küresel düzeyde olmalı. Yenilenebilir enerji kaynaklarına geçiş, "
+            "enerji verimliliğinin artırılması, sürdürülebilir tarım ve ormancılık uygulamaları ile karbon "
+            "yakalama teknolojileri mücadelenin temel unsurları. Bireysel olarak ise enerji tasarrufu yapmak, "
+            "toplu taşıma kullanmak, geri dönüşüme önem vermek ve bilinçli tüketim alışkanlıkları "
+            "geliştirmek herkesin yapabileceği katkılardır.\n\n"
+            "Paris İklim Anlaşması kapsamında ülkeler, küresel sıcaklık artışını iki derecenin altında "
+            "tutmayı ve mümkünse bir virgül beş dereceyle sınırlamayı hedefliyor. Bu hedefe ulaşmak, "
+            "insanlığın gelecek nesillere karşı en büyük sorumluluklarından biridir."
+        ),
+        "sorular": [
+            {"soru": "Sanayi devriminden bu yana sıcaklık kaç derece arttı?", "secenekler": ["0.5°C", "1.1°C", "2.0°C", "3.5°C"], "dogru": "1.1°C"},
+            {"soru": "Sera etkisi nasıl oluşur?", "secenekler": ["Güneş büyür", "Gazlar ısıyı atmosferde hapseder", "Okyanuslar ısınır", "Buzullar erir"], "dogru": "Gazlar ısıyı atmosferde hapseder"},
+            {"soru": "Hangisi sera gazı DEĞİLDİR?", "secenekler": ["Karbondioksit", "Metan", "Oksijen", "Diazot monoksit"], "dogru": "Oksijen"},
+            {"soru": "CO2 seviyesi kaç yılın en yükseğinde?", "secenekler": ["100.000", "500.000", "800.000", "1.000.000"], "dogru": "800.000"},
+            {"soru": "Küçük ada devletlerinin sorunu nedir?", "secenekler": ["Deprem", "Yükselen deniz seviyesi", "Volkan", "Tsunami"], "dogru": "Yükselen deniz seviyesi"},
+            {"soru": "İklim değişikliğine en az katkıda bulunan ülkeler ne yaşıyor?", "secenekler": ["En az zarar", "En çok fayda", "En çok zarar", "Hiçbir etki yok"], "dogru": "En çok zarar"},
+            {"soru": "Hangisi çözüm önerisi DEĞİLDİR?", "secenekler": ["Yenilenebilir enerji", "Daha fazla fosil yakıt", "Geri dönüşüm", "Enerji tasarrufu"], "dogru": "Daha fazla fosil yakıt"},
+            {"soru": "Paris Anlaşması hedefi nedir?", "secenekler": ["Sıcaklık artışını 2°C altında tutmak", "Tüm fabrikaları kapatmak", "Arabaları yasaklamak", "Ormanları korumak"], "dogru": "Sıcaklık artışını 2°C altında tutmak"},
+            {"soru": "Bireysel olarak ne yapabiliriz?", "secenekler": ["Hiçbir şey", "Enerji tasarrufu ve geri dönüşüm", "Sadece hükümet çözebilir", "Daha fazla tüketim"], "dogru": "Enerji tasarrufu ve geri dönüşüm"},
+            {"soru": "Metnin temel mesajı nedir?", "secenekler": ["İklim değişikliği doğal", "Bireysel ve küresel çözüm şart", "Teknoloji her şeyi çözer", "Sorun abartılıyor"], "dogru": "Bireysel ve küresel çözüm şart"},
+        ],
+    },
+}
+
+
+def get_speed_reading_data(grade: int) -> dict:
+    """Sınıf düzeyine uygun hızlı okuma verisini döndürür."""
+    return HIZLI_OKUMA_VERILERI.get(grade, HIZLI_OKUMA_VERILERI[4])
+
+
+def calculate_speed_reading_score(wpm: float, correct_answers: int, total_questions: int = 10) -> dict:
+    """Hızlı okuma skorunu hesaplar."""
+    comprehension_pct = (correct_answers / total_questions) * 100
+    effective_speed = wpm * (comprehension_pct / 100)
+    
+    # Seviye belirleme
+    if effective_speed >= 200:
+        level = "🌟 Mükemmel"
+        level_color = "#10B981"
+    elif effective_speed >= 150:
+        level = "🎯 Çok İyi"
+        level_color = "#3B82F6"
+    elif effective_speed >= 100:
+        level = "✅ İyi"
+        level_color = "#6366F1"
+    elif effective_speed >= 60:
+        level = "📊 Orta"
+        level_color = "#F59E0B"
+    else:
+        level = "📈 Geliştirilmeli"
+        level_color = "#EF4444"
+    
+    return {
+        "wpm": round(wpm, 1),
+        "comprehension_pct": round(comprehension_pct, 1),
+        "effective_speed": round(effective_speed, 1),
+        "correct_answers": correct_answers,
+        "total_questions": total_questions,
+        "level": level,
+        "level_color": level_color,
+    }

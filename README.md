@@ -1,56 +1,91 @@
 # 📖 Okuma Analiz Merkezi
 
-Sesli okuma hata analizi ve hızlı okuma testi sunan, **AI destekli** Streamlit uygulaması.
+AI destekli sesli okuma hata analizi ve hızlı okuma testi platformu.
 
-## 🎙️ Testler
+## 🎯 Özellikler
 
-| Test | Açıklama |
-|------|----------|
-| **Okuma Hata Analizi** | Öğrenci metni sesli okur → AI transkripsiyon ve karşılaştırma → 10 hata kategorisinde detaylı analiz |
-| **Hızlı Okuma Testi** | Zamanlı okuma + 10 anlama sorusu → Kelime/Dakika + Anlama yüzdesi |
+### Öğrenci Tarafı
+- **Sesli Okuma Kaydı** — Sınıf düzeyine uygun metin + tarayıcıdan mikrofon kaydı
+- **Hızlı Okuma Testi** — Zamanlı okuma + 10 anlama sorusu + skor hesaplama
+- **Geçmiş Kayıtlar** — Önceki kayıt ve test sonuçlarını görüntüleme
 
-## 📊 Okuma Hata Kategorileri
+### Öğretmen Tarafı
+- **Öğrenci Yönetimi** — Sınıf filtreli öğrenci listesi
+- **Ses Kaydı Dinleme** — Öğrenci kayıtlarını tarayıcıdan dinleme
+- **🤖 Claude AI Analizi** — 10 hata kategorisinde detaylı okuma analiz raporu
+- **Genel İstatistikler** — Sınıf bazlı öğrenci ve kayıt istatistikleri
 
-| # | Kategori | Açıklama |
-|---|----------|----------|
-| 1 | 🔤 Harf Hatası | Harflerin yanlış okunması |
-| 2 | 📎 Hece Hatası | Hecelerin yanlış bölünmesi |
-| 3 | ❌ Kelime Hatası | Kelimenin tamamen farklı okunması |
-| 4 | ⏭️ Atlama Hatası | Kelime/satır atlanması |
-| 5 | ➕ Ekleme Hatası | Metinde olmayan kelime eklenmesi |
-| 6 | 🔁 Tekrar Hatası | Gereksiz tekrarlama |
-| 7 | 🔄 Ters Çevirme | Harf/hece sırası değişimi |
-| 8 | 💨 Nefes Hatası | Yanlış yerde durma |
-| 9 | 🎵 Vurgu Hatası | Yanlış vurgu ve tonlama |
-| 10 | ⏱️ Hız Hatası | Çok yavaş/hızlı okuma |
-
-## 🎓 Desteklenen Sınıflar
-
-1. - 8. sınıf (her sınıfa uygun metin uzunluğu)
+### AI Analiz Raporu İçeriği
+- Tam transkripsiyon ve metin karşılaştırması
+- 10 hata kategorisinde sayısal ve detaylı analiz
+- Okuma hızı değerlendirmesi (kelime/dakika)
+- Okuma profili (akıcılık, prozodi, özgüven, dikkat)
+- Güçlü yönler ve gelişim alanları
+- Öğrenci, aile ve öğretmen için öneriler
+- Günlük/haftalık egzersiz planı
 
 ## 🚀 Kurulum
 
+### 1. Bağımlılıkları yükle
 ```bash
-git clone https://github.com/Ahmet571-es/okuma-analiz-merkezi.git
-cd okuma-analiz-merkezi
 pip install -r requirements.txt
-cp .env.example .env
-# .env dosyasını düzenle
+```
+
+### 2. Ortam değişkenlerini ayarla
+
+**Streamlit Cloud için** `.streamlit/secrets.toml` oluştur:
+```toml
+ANTHROPIC_API_KEY = "sk-ant-..."
+TEACHER_PASSWORD = "ogretmen123"
+```
+
+**Yerel geliştirme için** `.env` dosyası oluştur:
+```
+ANTHROPIC_API_KEY=sk-ant-...
+TEACHER_PASSWORD=ogretmen123
+```
+
+### 3. Uygulamayı başlat
+```bash
 streamlit run app.py
 ```
 
-## ⚙️ Ortam Değişkenleri
+## 📁 Dosya Yapısı
+```
+app.py                  — Ana uygulama (giriş/kayıt/yönlendirme)
+student_view.py         — Öğrenci arayüzü (metin + ses kaydı)
+teacher_view.py         — Öğretmen paneli (kayıt dinleme + AI analiz)
+okuma_hata_engine.py    — Metinler + hata kategorileri + AI prompt
+hizli_okuma_engine.py   — Hızlı okuma testi motoru
+db_utils.py             — Veritabanı işlemleri (SQLite/PostgreSQL)
+requirements.txt        — Bağımlılıklar
+.env.example            — Ortam değişkenleri şablonu
+.streamlit/config.toml  — Tema ayarları
+```
 
-| Değişken | Zorunlu | Açıklama |
-|----------|---------|----------|
-| `ANTHROPIC_API_KEY` | ✅ | Claude API anahtarı |
-| `TEACHER_PASSWORD` | ✅ | Öğretmen paneli şifresi |
-| `SUPABASE_DB_URL` | ❌ | PostgreSQL URL (yoksa SQLite) |
-| `CLAUDE_MODEL` | ❌ | Model adı (varsayılan: claude-sonnet-4-20250514) |
+## 🔐 Güvenlik
+- Şifreler SHA-256 ile hash'lenir
+- Öğretmen şifresi ortam değişkeninden alınır
+- Kurtarma kelimesi ile şifre sıfırlama
+- API anahtarı ortam değişkeni veya Streamlit secrets
 
-## 🛠️ Teknolojiler
+## 📊 Hata Kategorileri
+1. 🔤 Harf Hatası
+2. 📎 Hece Hatası
+3. ❌ Kelime Hatası
+4. ⏭️ Atlama Hatası
+5. ➕ Ekleme Hatası
+6. 🔁 Tekrar Hatası
+7. 🔄 Ters Çevirme Hatası
+8. 💨 Nefes/Durak Hatası
+9. 🎵 Vurgu/Tonlama Hatası
+10. ⏱️ Hız Hatası
 
-- **Frontend:** Streamlit
-- **AI:** Anthropic Claude API (claude-sonnet-4-20250514)
-- **Veritabanı:** PostgreSQL (Supabase) / SQLite
-- **Dil:** Python 3.10+
+## 🛠️ Teknoloji
+- **Frontend:** Streamlit 1.44.1
+- **AI:** Claude API (claude-sonnet-4-20250514)
+- **Veritabanı:** SQLite (varsayılan) / PostgreSQL (Supabase)
+- **Ses Kaydı:** Streamlit st.audio_input() (native)
+
+---
+📖 Okuma Analiz Merkezi — Powered by Claude AI • Otonom Reklam Ajansı
