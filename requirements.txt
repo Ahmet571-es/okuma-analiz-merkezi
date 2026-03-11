@@ -1,0 +1,4 @@
+streamlit
+anthropic
+python-dotenv
+psycopg2-binary
