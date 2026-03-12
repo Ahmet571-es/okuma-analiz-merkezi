@@ -184,10 +184,10 @@ SINIF_NORMLARI = {
 
 # ─── CLAUDE AI ANALİZ FONKSİYONU ─────────────────────────────────────────────
 
-def analyze_reading_with_claude(audio_base64: str, original_text: str, student_name: str, student_grade: int, audio_format: str = "webm") -> str:
+def analyze_reading_with_claude(transcription: str, original_text: str, student_name: str, student_grade: int, reading_duration_note: str = "") -> str:
     """
-    Claude API ile ses kaydını analiz eder.
-    Audio document olarak base64 gönderir.
+    Claude API ile öğrencinin okumasını analiz eder.
+    Öğretmenin yazdığı transkript ile orijinal metni karşılaştırır.
     """
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
@@ -208,24 +208,12 @@ def analyze_reading_with_claude(audio_base64: str, original_text: str, student_n
         f"{k['id']}. {k['emoji']} {k['ad']}: {k['aciklama']}" for k in HATA_KATEGORILERI
     ])
     
-    # Media type belirleme
-    media_type_map = {
-        "wav": "audio/wav",
-        "webm": "audio/webm",
-        "mp3": "audio/mp3",
-        "ogg": "audio/ogg",
-        "mp4": "audio/mp4",
-        "m4a": "audio/mp4",
-    }
-    media_type = media_type_map.get(audio_format.lower(), "audio/wav")
-    
     system_prompt = f"""Sen, Türkiye'de ilkokul ve ortaokul düzeyinde öğrencilerin okuma becerilerini analiz eden uzman bir eğitim psikoloğu ve okuma uzmanısın. 
 
 Görevin:
-1. Öğrencinin sesli okumasını dikkatle dinle
-2. Orijinal metinle karşılaştır
-3. 10 hata kategorisinde detaylı analiz yap
-4. En az 2000 kelimelik kapsamlı bir rapor üret
+1. Öğretmenin yazdığı transkripsiyon (öğrencinin sesli okuduğu metin) ile orijinal metni karşılaştır
+2. 10 hata kategorisinde detaylı analiz yap
+3. En az 2000 kelimelik kapsamlı bir rapor üret
 
 HATA KATEGORİLERİ:
 {kategoriler_str}
@@ -239,20 +227,25 @@ SINIF NORMLARI ({student_grade}. Sınıf - Kelime/Dakika):
 Raporunu Türkçe yaz, Markdown formatında, tablolar ve emojiler kullan.
 Rapor profesyonel, empatik ve yapıcı olmalı."""
 
+    duration_info = f"\n- **Okuma Süresi Notu:** {reading_duration_note}" if reading_duration_note else ""
+
     user_prompt = f"""## Öğrenci Bilgileri
 - **Öğrenci:** {student_name}
-- **Sınıf:** {student_grade}. Sınıf
+- **Sınıf:** {student_grade}. Sınıf{duration_info}
 
-## Orijinal Metin
+## Orijinal Metin (Öğrencinin okuması gereken metin)
 {original_text}
 
+## Öğrencinin Okuduğu Metin (Öğretmen Transkripti)
+{transcription}
+
 ## Görev
-Yukarıda ses kaydı olarak gönderilen öğrencinin okumasını dinle ve aşağıdaki yapıda kapsamlı bir analiz raporu üret:
+Yukarıda öğretmenin yazdığı transkripsiyon ile orijinal metni karşılaştırarak kapsamlı bir okuma hata analizi raporu üret.
 
 ### RAPOR YAPISI (Bu başlıkların hepsini kullan):
 
 1. **📋 GENEL BİLGİLER** — Öğrenci adı, sınıf, tarih, metin bilgisi
-2. **📝 TRANSKRİPSİYON** — Öğrencinin okuduğu metnin tam dökümü (duyduğun gibi yaz)
+2. **📝 TRANSKRİPSİYON** — Öğrencinin okuduğu metnin tam dökümü (öğretmenin yazdığı gibi)
 3. **🔍 METİN KARŞILAŞTIRMASI** — Orijinal metin ile okunan metin arasındaki farklar (tablo halinde)
 4. **📊 HATA ANALİZİ TABLOSU** — 10 kategori, her birinde bulunan hata sayısı (tablo)
 5. **🔤 HARF HATALARI DETAYI** — Her harf hatasının detaylı açıklaması
@@ -262,8 +255,8 @@ Yukarıda ses kaydı olarak gönderilen öğrencinin okumasını dinle ve aşağ
 9. **➕ EKLEME HATALARI DETAYI** — Eklenen kelimeler
 10. **🔁 TEKRAR HATALARI DETAYI** — Tekrarlanan kelimeler
 11. **🔄 TERS ÇEVİRME HATALARI DETAYI** — Ters çevrilen harf/heceler
-12. **💨 NEFES/DURAK HATALARI DETAYI** — Yanlış yerlerde yapılan duraklar
-13. **🎵 VURGU/TONLAMA ANALİZİ** — Prozodi, tonlama, vurgu değerlendirmesi
+12. **💨 NEFES/DURAK HATALARI DETAYI** — Yanlış yerlerde yapılan duraklar (transkriptte "..." veya parantez içi notlardan çıkar)
+13. **🎵 VURGU/TONLAMA ANALİZİ** — Prozodi, tonlama, vurgu değerlendirmesi (transkriptteki notlara göre)
 14. **⏱️ HIZ DEĞERLENDİRMESİ** — Kelime/dakika tahmini, sınıf normlarıyla karşılaştırma
 15. **📈 OKUMA PROFİLİ** — Akıcılık, prozodi, özgüven, dikkat değerlendirmesi (her biri 1-10 puan)
 16. **💪 GÜÇLÜ YÖNLER** — En az 3 madde
@@ -290,20 +283,7 @@ Rapor en az 2000 kelime olmalı. Detaylı, kapsamlı ve yapıcı yaz."""
             messages=[
                 {
                     "role": "user",
-                    "content": [
-                        {
-                            "type": "document",
-                            "source": {
-                                "type": "base64",
-                                "media_type": media_type,
-                                "data": audio_base64,
-                            },
-                        },
-                        {
-                            "type": "text",
-                            "text": user_prompt,
-                        },
-                    ],
+                    "content": user_prompt,
                 }
             ],
         )

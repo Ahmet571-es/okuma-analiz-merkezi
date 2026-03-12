@@ -130,10 +130,46 @@ def render_ogrenci_analizi():
                 
                 # Yeniden analiz
                 if st.button(f"🔄 Yeniden Analiz Et", key=f"reanalyze_{rec_id}"):
-                    run_analysis(rec_id, selected_id, student, full_rec)
+                    st.session_state[f"show_transcription_{rec_id}"] = True
             else:
                 if st.button(f"🤖 Claude AI ile Analiz Et", key=f"analyze_{rec_id}", type="primary"):
-                    run_analysis(rec_id, selected_id, student, full_rec)
+                    st.session_state[f"show_transcription_{rec_id}"] = True
+            
+            # Transkripsiyon giriş alanı
+            if st.session_state.get(f"show_transcription_{rec_id}"):
+                st.markdown("""
+                <div style="background: #FFF7ED; border-left: 4px solid #F59E0B; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <strong>📝 Transkripsiyon Girişi</strong><br>
+                    Yukarıdaki ses kaydını dinle ve öğrencinin okuduğunu <strong>duyduğun gibi</strong> aşağıya yaz.<br>
+                    <small>💡 İpuçları: Yanlış okunan kelimeleri olduğu gibi yaz. Durakları "..." ile belirt. 
+                    Tekrarlanan kelimeleri tekrar yaz. Atlanan kelimeleri yazma.</small>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                transcription = st.text_area(
+                    "Öğrencinin okuduğu metin (duyduğunuz gibi yazın):",
+                    height=200,
+                    key=f"transcription_{rec_id}",
+                    placeholder="Öğrencinin sesli okumasını dinleyerek buraya yazın..."
+                )
+                
+                duration_note = st.text_input(
+                    "⏱️ Okuma süresi notu (isteğe bağlı):",
+                    key=f"duration_note_{rec_id}",
+                    placeholder="Örn: yaklaşık 2 dakika, hızlı okudu, çok yavaş vb."
+                )
+                
+                col_analyze, col_cancel = st.columns(2)
+                with col_analyze:
+                    if st.button("🚀 Analizi Başlat", key=f"run_analyze_{rec_id}", type="primary", use_container_width=True):
+                        if not transcription or len(transcription.strip()) < 10:
+                            st.warning("⚠️ Lütfen öğrencinin okuduğunu yazın (en az 10 karakter).")
+                        else:
+                            run_analysis(rec_id, selected_id, student, transcription.strip(), duration_note.strip())
+                with col_cancel:
+                    if st.button("❌ Vazgeç", key=f"cancel_analyze_{rec_id}", use_container_width=True):
+                        del st.session_state[f"show_transcription_{rec_id}"]
+                        st.rerun()
             
             # Silme butonu
             st.markdown("---")
@@ -178,22 +214,28 @@ def render_ogrenci_analizi():
         st.info("Bu öğrencinin hızlı okuma test sonucu bulunmuyor.")
 
 
-def run_analysis(rec_id, student_id, student, full_rec):
-    """Claude AI analizi çalıştırır."""
-    if not full_rec or not full_rec.get('audio_base64'):
+def run_analysis(rec_id, student_id, student, transcription, duration_note=""):
+    """Claude AI analizi çalıştırır (transkripsiyon tabanlı)."""
+    if not transcription:
+        st.error("Transkripsiyon metni bulunamadı!")
+        return
+    
+    # Orijinal metni al
+    full_rec = get_recording_by_id(rec_id)
+    if not full_rec:
         st.error("Ses kaydı verisi bulunamadı!")
         return
     
     with st.spinner("🤖 Claude AI analiz yapıyor... Bu işlem 30-60 saniye sürebilir."):
         progress = st.progress(0)
-        progress.progress(10, "Ses kaydı hazırlanıyor...")
+        progress.progress(10, "Transkripsiyon hazırlanıyor...")
         
         report = analyze_reading_with_claude(
-            audio_base64=full_rec['audio_base64'],
+            transcription=transcription,
             original_text=full_rec['original_text'],
             student_name=student['name'],
             student_grade=student['grade'],
-            audio_format="webm"
+            reading_duration_note=duration_note
         )
         
         progress.progress(80, "Rapor kaydediliyor...")
