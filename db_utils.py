@@ -32,24 +32,36 @@ def _get_db_url():
     return ""
 
 
-@st.cache_resource
-def _get_pg_pool():
-    """PostgreSQL bağlantı havuzu oluşturur (cache'lenir)."""
-    db_url = _get_db_url()
-    if not db_url:
-        return None
-    
-    try:
-        from psycopg2 import pool
-        connection_pool = pool.ThreadedConnectionPool(
-            minconn=1,
-            maxconn=5,
-            dsn=db_url
-        )
-        return connection_pool
-    except Exception as e:
-        st.warning(f"⚠️ PostgreSQL bağlantı havuzu oluşturulamadı: {e}")
-        return None
+try:
+    @st.cache_resource
+    def _get_pg_pool():
+        """PostgreSQL bağlantı havuzu oluşturur (cache'lenir)."""
+        db_url = _get_db_url()
+        if not db_url:
+            return None
+        
+        try:
+            from psycopg2 import pool
+            connection_pool = pool.ThreadedConnectionPool(
+                minconn=1,
+                maxconn=5,
+                dsn=db_url
+            )
+            return connection_pool
+        except Exception as e:
+            print(f"⚠️ PostgreSQL bağlantı havuzu oluşturulamadı: {e}")
+            return None
+except Exception:
+    def _get_pg_pool():
+        """Fallback — cache_resource yoksa."""
+        db_url = _get_db_url()
+        if not db_url:
+            return None
+        try:
+            from psycopg2 import pool
+            return pool.ThreadedConnectionPool(minconn=1, maxconn=5, dsn=db_url)
+        except Exception:
+            return None
 
 
 @contextmanager

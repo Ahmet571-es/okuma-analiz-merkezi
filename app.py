@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # Veritabanını başlat
-from db_utils import init_db, register_user, login_user, reset_password, check_db_status
+from db_utils import init_db, register_user, login_user, reset_password
 init_db()
 
 # ─── CSS STİLLERİ ────────────────────────────────────────────────────────────
@@ -177,11 +177,15 @@ def render_login_page():
         st.markdown("</div>", unsafe_allow_html=True)
         
         # Veritabanı durum göstergesi
-        db_info = check_db_status()
-        if db_info.get("db_type") == "postgresql":
-            st.caption("🟢 Veritabanı: PostgreSQL (veriler kalıcı)")
-        else:
-            st.caption("🟡 Veritabanı: SQLite (⚠️ veriler yeniden başlatmada kaybolur — Supabase PostgreSQL önerilir)")
+        try:
+            from db_utils import check_db_status
+            db_info = check_db_status()
+            if db_info.get("db_type") == "postgresql":
+                st.caption("🟢 Veritabanı: PostgreSQL (veriler kalıcı)")
+            else:
+                st.caption("🟡 Veritabanı: SQLite (⚠️ veriler yeniden başlatmada kaybolur)")
+        except Exception:
+            pass
 
 
 def render_student_login():
