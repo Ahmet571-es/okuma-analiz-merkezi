@@ -184,11 +184,17 @@ SINIF_NORMLARI = {
 
 # ─── CLAUDE AI ANALİZ FONKSİYONU ─────────────────────────────────────────────
 
-def analyze_reading_with_claude(transcription: str, original_text: str, student_name: str, student_grade: int, reading_duration_note: str = "") -> str:
+
+def analyze_reading_with_claude(transcription: str, original_text: str, student_name: str, student_grade: int, reading_duration_seconds: float = 0) -> dict:
     """
     Claude API ile öğrencinin okumasını analiz eder.
-    Öğretmenin yazdığı transkript ile orijinal metni karşılaştırır.
+    Whisper transkripti ile orijinal metni karşılaştırır.
+    
+    Returns:
+        dict: {"success": bool, "report": str, "data": dict, "error": str}
     """
+    import json
+    
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
         try:
@@ -198,22 +204,27 @@ def analyze_reading_with_claude(transcription: str, original_text: str, student_
             pass
     
     if not api_key:
-        return "❌ **HATA:** Claude API anahtarı bulunamadı. Lütfen ANTHROPIC_API_KEY ortam değişkenini ayarlayın."
+        return {"success": False, "report": "", "data": {}, "error": "ANTHROPIC_API_KEY bulunamadı."}
     
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-20250514")
     normlar = SINIF_NORMLARI.get(student_grade, SINIF_NORMLARI[4])
     
-    # Hata kategorileri string
     kategoriler_str = "\n".join([
         f"{k['id']}. {k['emoji']} {k['ad']}: {k['aciklama']}" for k in HATA_KATEGORILERI
     ])
     
+    word_count = len(original_text.split())
+    wpm_info = ""
+    if reading_duration_seconds and reading_duration_seconds > 0:
+        wpm = (word_count / reading_duration_seconds) * 60
+        wpm_info = f"\n- **Okuma Süresi:** {reading_duration_seconds:.1f} saniye\n- **Hesaplanan Hız:** {wpm:.0f} kelime/dakika"
+    
     system_prompt = f"""Sen, Türkiye'de ilkokul ve ortaokul düzeyinde öğrencilerin okuma becerilerini analiz eden uzman bir eğitim psikoloğu ve okuma uzmanısın. 
 
 Görevin:
-1. Öğretmenin yazdığı transkripsiyon (öğrencinin sesli okuduğu metin) ile orijinal metni karşılaştır
+1. Whisper AI tarafından transkript edilen öğrenci okuması ile orijinal metni karşılaştır
 2. 10 hata kategorisinde detaylı analiz yap
-3. En az 2000 kelimelik kapsamlı bir rapor üret
+3. Kapsamlı bir rapor üret + yapısal veri JSON çıkar
 
 HATA KATEGORİLERİ:
 {kategoriler_str}
@@ -224,54 +235,84 @@ SINIF NORMLARI ({student_grade}. Sınıf - Kelime/Dakika):
 - İyi: {normlar['iyi']} k/dk
 - Çok İyi: {normlar['cok_iyi']} k/dk üstü
 
+ÖNEMLİ: Raporun EN SONUNDA, ```json ve ``` arasında aşağıdaki yapıda bir JSON bloğu ekle.
+Bu JSON grafik oluşturmak için kullanılacak.
+
+```json
+{{
+  "hata_sayilari": {{
+    "Harf Hatası": 0,
+    "Hece Hatası": 0,
+    "Kelime Hatası": 0,
+    "Atlama Hatası": 0,
+    "Ekleme Hatası": 0,
+    "Tekrar Hatası": 0,
+    "Ters Çevirme": 0,
+    "Nefes/Durak": 0,
+    "Vurgu/Tonlama": 0,
+    "Hız Hatası": 0
+  }},
+  "profil_puanlari": {{
+    "Akıcılık": 7,
+    "Prozodi": 6,
+    "Özgüven": 8,
+    "Dikkat": 7,
+    "Doğruluk": 6
+  }},
+  "wpm": 85,
+  "toplam_hata": 5,
+  "toplam_kelime": {word_count},
+  "dogruluk_yuzdesi": 95.0,
+  "seviye": "Orta",
+  "hata_detaylari": [
+    {{"orijinal": "kelime1", "okunan": "kelime2", "kategori": "Kelime Hatası", "aciklama": "açıklama"}}
+  ]
+}}
+```
+
 Raporunu Türkçe yaz, Markdown formatında, tablolar ve emojiler kullan.
 Rapor profesyonel, empatik ve yapıcı olmalı."""
 
-    duration_info = f"\n- **Okuma Süresi Notu:** {reading_duration_note}" if reading_duration_note else ""
-
     user_prompt = f"""## Öğrenci Bilgileri
 - **Öğrenci:** {student_name}
-- **Sınıf:** {student_grade}. Sınıf{duration_info}
+- **Sınıf:** {student_grade}. Sınıf
+- **Metin Kelime Sayısı:** {word_count} kelime{wpm_info}
 
 ## Orijinal Metin (Öğrencinin okuması gereken metin)
 {original_text}
 
-## Öğrencinin Okuduğu Metin (Öğretmen Transkripti)
+## Öğrencinin Okuduğu Metin (Whisper AI Transkripti)
 {transcription}
 
 ## Görev
-Yukarıda öğretmenin yazdığı transkripsiyon ile orijinal metni karşılaştırarak kapsamlı bir okuma hata analizi raporu üret.
+Yukarıdaki Whisper AI transkripti ile orijinal metni kelime kelime karşılaştırarak kapsamlı bir okuma hata analizi raporu üret.
 
-### RAPOR YAPISI (Bu başlıkların hepsini kullan):
+NOT: Whisper bazen küçük transkripsiyon hataları yapabilir. Belirgin okuma hatalarına odaklan, Whisper'ın kendisinden kaynaklanan küçük noktalama/yazım farklarını hata olarak sayma.
 
-1. **📋 GENEL BİLGİLER** — Öğrenci adı, sınıf, tarih, metin bilgisi
-2. **📝 TRANSKRİPSİYON** — Öğrencinin okuduğu metnin tam dökümü (öğretmenin yazdığı gibi)
-3. **🔍 METİN KARŞILAŞTIRMASI** — Orijinal metin ile okunan metin arasındaki farklar (tablo halinde)
-4. **📊 HATA ANALİZİ TABLOSU** — 10 kategori, her birinde bulunan hata sayısı (tablo)
-5. **🔤 HARF HATALARI DETAYI** — Her harf hatasının detaylı açıklaması
-6. **📎 HECE HATALARI DETAYI** — Her hece hatasının detaylı açıklaması
-7. **❌ KELİME HATALARI DETAYI** — Her kelime hatasının detaylı açıklaması
-8. **⏭️ ATLAMA HATALARI DETAYI** — Atlanan kelime/satırlar
-9. **➕ EKLEME HATALARI DETAYI** — Eklenen kelimeler
-10. **🔁 TEKRAR HATALARI DETAYI** — Tekrarlanan kelimeler
-11. **🔄 TERS ÇEVİRME HATALARI DETAYI** — Ters çevrilen harf/heceler
-12. **💨 NEFES/DURAK HATALARI DETAYI** — Yanlış yerlerde yapılan duraklar (transkriptte "..." veya parantez içi notlardan çıkar)
-13. **🎵 VURGU/TONLAMA ANALİZİ** — Prozodi, tonlama, vurgu değerlendirmesi (transkriptteki notlara göre)
-14. **⏱️ HIZ DEĞERLENDİRMESİ** — Kelime/dakika tahmini, sınıf normlarıyla karşılaştırma
-15. **📈 OKUMA PROFİLİ** — Akıcılık, prozodi, özgüven, dikkat değerlendirmesi (her biri 1-10 puan)
-16. **💪 GÜÇLÜ YÖNLER** — En az 3 madde
-17. **🎯 GELİŞİM ALANLARI** — En az 3 madde
-18. **👨‍🎓 ÖĞRENCİ İÇİN ÖNERİLER** — En az 5 madde
-19. **👨‍👩‍👧 AİLE İÇİN ÖNERİLER** — En az 4 madde
-20. **👩‍🏫 ÖĞRETMEN İÇİN ÖNERİLER** — En az 4 madde
-21. **📅 GÜNLÜK/HAFTALIK EGZERSİZ PLANI** — Detaylı plan
-22. **⚠️ UYARI NOTLARI** — Profesyonel değerlendirme gerektiren bulgular (varsa)
+### RAPOR YAPISI:
+1. **📋 GENEL BİLGİLER** — Öğrenci adı, sınıf, tarih, metin bilgisi, okuma hızı
+2. **📝 TRANSKRİPSİYON KARŞILAŞTIRMASI** — Orijinal metin ile okunan metin yan yana
+3. **🔍 FARK ANALİZİ** — Orijinal vs okunan farklar tablo halinde (her fark ayrı satır)
+4. **📊 HATA ANALİZİ TABLOSU** — 10 kategori hata sayıları (tablo)
+5-11. Her hata kategorisi için detaylı analiz (varsa)
+12. **🎵 VURGU/TONLAMA ANALİZİ** — Prozodi değerlendirmesi
+13. **⏱️ HIZ DEĞERLENDİRMESİ** — Kelime/dakika, sınıf normlarıyla karşılaştırma
+14. **📈 OKUMA PROFİLİ** — Akıcılık, prozodi, özgüven, dikkat, doğruluk (her biri 1-10 puan)
+15. **💪 GÜÇLÜ YÖNLER** — En az 3 madde
+16. **🎯 GELİŞİM ALANLARI** — En az 3 madde
+17. **👨‍🎓 ÖĞRENCİ İÇİN ÖNERİLER** — En az 5 madde
+18. **👨‍👩‍👧 AİLE İÇİN ÖNERİLER** — En az 4 madde
+19. **👩‍🏫 ÖĞRETMEN İÇİN ÖNERİLER** — En az 4 madde
+20. **📅 GÜNLÜK/HAFTALIK EGZERSİZ PLANI** — Detaylı plan
+21. **⚠️ UYARI NOTLARI** — Profesyonel değerlendirme gerektiren bulgular (varsa)
 
 Her hata detayında şu formatı kullan:
 | Orijinal | Okunan | Açıklama |
 |----------|--------|----------|
 
-Rapor en az 2000 kelime olmalı. Detaylı, kapsamlı ve yapıcı yaz."""
+Rapor en az 2000 kelime olmalı. Detaylı, kapsamlı ve yapıcı yaz.
+
+⚠️ RAPORUN EN SONUNA ```json ... ``` bloğunu MUTLAKA ekle (grafik verisi için)."""
 
     try:
         client = anthropic.Anthropic(api_key=api_key)
@@ -288,18 +329,33 @@ Rapor en az 2000 kelime olmalı. Detaylı, kapsamlı ve yapıcı yaz."""
             ],
         )
         
-        # Yanıtı birleştir
         result_text = ""
         for block in message.content:
             if hasattr(block, 'text'):
                 result_text += block.text
         
-        return result_text if result_text else "❌ Claude API'den boş yanıt alındı."
+        if not result_text:
+            return {"success": False, "report": "", "data": {}, "error": "Claude API'den boş yanıt alındı."}
+        
+        # JSON bloğunu ayıkla
+        data = {}
+        report = result_text
+        try:
+            json_start = result_text.rfind("```json")
+            json_end = result_text.rfind("```", json_start + 7)
+            if json_start != -1 and json_end != -1:
+                json_str = result_text[json_start + 7:json_end].strip()
+                data = json.loads(json_str)
+                report = result_text[:json_start].strip()
+        except (json.JSONDecodeError, ValueError):
+            pass
+        
+        return {"success": True, "report": report, "data": data, "error": ""}
         
     except anthropic.APIError as e:
-        return f"❌ **Claude API Hatası:** {str(e)}"
+        return {"success": False, "report": "", "data": {}, "error": f"Claude API Hatası: {str(e)}"}
     except Exception as e:
-        return f"❌ **Beklenmeyen Hata:** {str(e)}"
+        return {"success": False, "report": "", "data": {}, "error": f"Beklenmeyen Hata: {str(e)}"}
 
 
 def get_text_for_grade(grade: int) -> dict:

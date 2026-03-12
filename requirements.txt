@@ -1,4 +1,6 @@
 streamlit==1.44.1
 anthropic
+openai
 python-dotenv
 psycopg2-binary
+plotly
