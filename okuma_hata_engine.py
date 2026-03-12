@@ -184,7 +184,7 @@ SINIF_NORMLARI = {
 
 # ─── CLAUDE AI ANALİZ FONKSİYONU ─────────────────────────────────────────────
 
-def analyze_reading_with_claude(audio_base64: str, original_text: str, student_name: str, student_grade: int, audio_format: str = "wav") -> str:
+def analyze_reading_with_claude(audio_base64: str, original_text: str, student_name: str, student_grade: int, audio_format: str = "webm") -> str:
     """
     Claude API ile ses kaydını analiz eder.
     Audio document olarak base64 gönderir.

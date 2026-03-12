@@ -116,7 +116,7 @@ def render_ogrenci_analizi():
             if full_rec and full_rec.get('audio_base64'):
                 try:
                     audio_bytes = base64.b64decode(full_rec['audio_base64'])
-                    st.audio(audio_bytes, format="audio/wav")
+                    st.audio(audio_bytes)
                 except Exception as e:
                     st.error(f"Ses kaydı oynatılamadı: {e}")
             else:
@@ -172,7 +172,7 @@ def run_analysis(rec_id, student_id, student, full_rec):
             original_text=full_rec['original_text'],
             student_name=student['name'],
             student_grade=student['grade'],
-            audio_format="wav"
+            audio_format="webm"
         )
         
         progress.progress(80, "Rapor kaydediliyor...")

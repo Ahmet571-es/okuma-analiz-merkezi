@@ -82,7 +82,7 @@ def render_okuma_kaydi(user):
     
     if audio_data is not None:
         st.success("✅ Ses kaydı alındı! Aşağıdan dinleyebilirsin.")
-        st.audio(audio_data, format="audio/wav")
+        st.audio(audio_data)
         
         col1, col2 = st.columns(2)
         with col1:
