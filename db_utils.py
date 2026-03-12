@@ -2,6 +2,7 @@
 Veritabanı İşlemleri — PostgreSQL (Supabase) / SQLite fallback
 Kalıcı kullanıcı verileri için PostgreSQL önerilir.
 SQLite yalnızca yerel geliştirme içindir (cloud platformlarda veriler kaybolur).
+v2.1 — delete_recording eklendi
 """
 
 import sqlite3
