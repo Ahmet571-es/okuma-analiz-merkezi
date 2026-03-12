@@ -6,7 +6,7 @@
 import streamlit as st
 import base64
 import time
-from db_utils import save_audio_recording, get_recordings_by_user, save_speed_reading_result, get_speed_reading_results
+from db_utils import save_audio_recording, get_recordings_by_user, get_recording_by_id, delete_recording, save_speed_reading_result, get_speed_reading_results
 from okuma_hata_engine import get_text_for_grade, HATA_KATEGORILERI
 from hizli_okuma_engine import get_speed_reading_data, calculate_speed_reading_score
 
@@ -275,7 +275,38 @@ def render_gecmis_kayitlar(user):
             with st.expander(f"📅 {rec['created_at']} — {rec['text_id']}"):
                 st.markdown(f"**Metin ID:** {rec['text_id']}")
                 st.markdown(f"**Kayıt Tarihi:** {rec['created_at']}")
+                
+                # Ses kaydını dinle
+                full_rec = get_recording_by_id(rec['id'])
+                if full_rec and full_rec.get('audio_base64'):
+                    try:
+                        import base64 as b64
+                        audio_bytes = b64.b64decode(full_rec['audio_base64'])
+                        st.audio(audio_bytes)
+                    except Exception:
+                        st.warning("Ses kaydı oynatılamadı.")
+                
                 st.info("Ses kaydın öğretmeninde mevcut. Analiz sonuçları için öğretmenine danış.")
+                
+                # Silme butonu
+                if st.button("🗑️ Bu Kaydı Sil", key=f"del_student_rec_{rec['id']}", type="secondary"):
+                    st.session_state[f"confirm_del_{rec['id']}"] = True
+                
+                if st.session_state.get(f"confirm_del_{rec['id']}"):
+                    st.warning("⚠️ Bu ses kaydı ve varsa analiz raporu kalıcı olarak silinecek!")
+                    col_yes, col_no = st.columns(2)
+                    with col_yes:
+                        if st.button("✅ Evet, Sil", key=f"confirm_yes_{rec['id']}", type="primary"):
+                            if delete_recording(rec['id']):
+                                st.success("Kayıt silindi!")
+                                del st.session_state[f"confirm_del_{rec['id']}"]
+                                st.rerun()
+                            else:
+                                st.error("Silme sırasında hata oluştu.")
+                    with col_no:
+                        if st.button("❌ Vazgeç", key=f"confirm_no_{rec['id']}"):
+                            del st.session_state[f"confirm_del_{rec['id']}"]
+                            st.rerun()
     else:
         st.info("Henüz ses kaydın bulunmuyor. İlk kaydını yapmak için 'Okuma Hata Analizi' sekmesine git.")
     

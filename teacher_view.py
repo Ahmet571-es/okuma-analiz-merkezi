@@ -8,7 +8,7 @@ import base64
 from db_utils import (
     get_all_students, get_user_by_id, get_recordings_by_user,
     get_recording_by_id, save_analysis_report, get_report_by_recording,
-    get_reports_by_user, get_speed_reading_results
+    get_reports_by_user, get_speed_reading_results, delete_recording
 )
 from okuma_hata_engine import analyze_reading_with_claude, HATA_KATEGORILERI
 
@@ -134,6 +134,27 @@ def render_ogrenci_analizi():
             else:
                 if st.button(f"🤖 Claude AI ile Analiz Et", key=f"analyze_{rec_id}", type="primary"):
                     run_analysis(rec_id, selected_id, student, full_rec)
+            
+            # Silme butonu
+            st.markdown("---")
+            if st.button("🗑️ Bu Kaydı Sil", key=f"del_teacher_rec_{rec_id}", type="secondary"):
+                st.session_state[f"teacher_confirm_del_{rec_id}"] = True
+            
+            if st.session_state.get(f"teacher_confirm_del_{rec_id}"):
+                st.warning("⚠️ Bu ses kaydı ve varsa analiz raporu kalıcı olarak silinecek!")
+                col_yes, col_no = st.columns(2)
+                with col_yes:
+                    if st.button("✅ Evet, Sil", key=f"teacher_yes_{rec_id}", type="primary"):
+                        if delete_recording(rec_id):
+                            st.success("Kayıt silindi!")
+                            del st.session_state[f"teacher_confirm_del_{rec_id}"]
+                            st.rerun()
+                        else:
+                            st.error("Silme sırasında hata oluştu.")
+                with col_no:
+                    if st.button("❌ Vazgeç", key=f"teacher_no_{rec_id}"):
+                        del st.session_state[f"teacher_confirm_del_{rec_id}"]
+                        st.rerun()
     
     # Hızlı okuma sonuçları
     st.markdown("### ⚡ Hızlı Okuma Sonuçları")

@@ -384,6 +384,22 @@ def get_recording_by_id(recording_id):
         return None
 
 
+def delete_recording(recording_id):
+    """Ses kaydını ve ilişkili analiz raporlarını siler."""
+    try:
+        with get_connection() as (conn, cursor, db_type):
+            p = _param(db_type)
+            # Önce ilişkili analiz raporlarını sil
+            cursor.execute(f"DELETE FROM analysis_reports WHERE recording_id = {p}", (recording_id,))
+            # Sonra ses kaydını sil
+            cursor.execute(f"DELETE FROM audio_recordings WHERE id = {p}", (recording_id,))
+            conn.commit()
+            return True
+    except Exception as e:
+        print(f"Kayıt silme hatası: {e}")
+        return False
+
+
 # ─── Analiz Raporu İşlemleri ──────────────────────────────────────────────────
 
 def save_analysis_report(recording_id, user_id, report_markdown, error_summary=None):
